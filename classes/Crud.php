@@ -13,6 +13,7 @@
                 $resp['success'] = true;
             }else{
                 $resp['success'] = false;
+                $resp['error'] = mysqli_error($this->conn);
             }
             return $resp;
         }

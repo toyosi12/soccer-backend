@@ -1,0 +1,85 @@
+<?php
+    require '../../../../vendor/autoload.php';
+    require '../../../../../portal-classes/Crud.php';
+    use Minishlink\WebPush\WebPush;
+    use Minishlink\WebPush\Subscription;
+    //$_data = json_decode(file_get_contents('php://input'),true);
+    $auth = array(
+        'VAPID' => array(
+            'subject' => 'mailto:noreply@edu.sqi.ng',
+            'publicKey' => 'BIrxCacdxpxiM2l5GWMDEsgEAfJA8lmZP7p7n9cQW6EfibpgBFiPz3PEPv2_AXUWyFE8fXEt2BqxhaAYgv3T_70',
+            'privateKey' => 'CDHb4ZZjZtBkmqFqC96rXrt4XWR4c2o8_aGlsEqEXVI'
+        )
+    );
+    $webPush = new WebPush($auth);
+    $q = new Crud();
+    $query = "SELECT * FROM student_notification_tb";
+    $fetch = $q->read2($query);
+    while($row = $fetch->fetch_assoc()){
+         $_data = json_decode($row['notification_json'], true);
+         $title = "NOTIFICATION"; 
+         $body = "Message for ". $row['student_id'];
+// array of notifications
+$notifications = [
+    [
+        'subscription' => Subscription::create([
+            'endpoint' => $_data['endpoint'], // Firefox 43+,
+            'publicKey' => $_data['keys']['p256dh'], // base 64 encoded, should be 88 chars
+            'authToken' => $_data['keys']['auth'], // base 64 encoded, should be 24 chars
+        ]),
+        'payload' => '{
+            "notification": {
+              "title": "' . $title . '",
+              "actions": [
+                {
+                  "action": "action",
+                  "title": "action"
+                }
+              ],
+              "body": "' . $body . '",
+              "dir": "auto",
+              "icon": "https://edu.sqi.ng/edozzier/images/logo.png",
+              "badge": "https://edu.sqi.ng/edozzier/images/logo.png",
+              "lang": "en",
+              "renotify": true,
+              "requireInteraction": true,
+              "tag": 92679601234092030,
+              "vibrate": [
+                300,
+                100,
+                400
+              ],
+              "data": {
+                "url": "https://twitter.com/statuses/92679601234092032",
+                "created_at": "Sat Nov 04 12:59:23 +0000 2017",
+                "favorite_count": 0,
+                "retweet_count": 0
+              }
+            }
+          }',
+    ]
+];
+
+
+print_r($notifications[0]);
+// send multiple notifications with payload
+// foreach ($notifications as $notification) {
+//     $x = $webPush->sendNotification(
+//         $notification['subscription'],
+//         $notification['payload'] // optional (defaults null)
+//     );
+//     //print_r($x);
+// }
+
+
+
+//send one notification and flush directly
+$y = $webPush->sendNotification(
+    $notifications[0]['subscription'],
+    $notifications[0]['payload'], // optional (defaults null)
+    true // optional (defaults false)
+);
+}
+//echo json_encode($webPush->flush());
+//print_r($y);
+?>

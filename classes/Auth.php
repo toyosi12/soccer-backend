@@ -72,7 +72,7 @@
         public function login($userDetails){
             $username = $_POST['username'];
             $password = sha1($_POST['password']);
-            $query = "SELECT * FROM users WHERE (user_name = ? OR email = ?) AND password = ?";//include option to check status
+            $query = "SELECT * FROM users LEFT JOIN team_membership USING(user_id) WHERE (user_name = ? OR email = ?) AND password = ? and users.status <> 'admin'";//include option to check status
             $binder = array("sss", "$username", "$username", "$password");
             $stmt = $this->read($query, $binder);
             if($stmt->num_rows == 1){
@@ -80,6 +80,27 @@
                 $data['message'] = $st;
                 $data['success'] = true;
                 $_SESSION['user'] = $st['user_id'];
+                $_SESSION['team_id'] = $st['team_id'];
+                 
+            }else{
+                $data['success'] = false;
+                $data['message'] = "Login failed";
+            }
+            return $data;
+            $this->conn->close();
+        }
+
+        public function loginAdmin($userDetails){
+            $username = $_POST['username'];
+            $password = sha1($_POST['password']);
+            $query = "SELECT * FROM users WHERE (user_name = ? OR email = ?) AND password = ? AND status = 'admin'";//include option to check status
+            $binder = array("sss", "$username", "$username", "$password");
+            $stmt = $this->read($query, $binder);
+            if($stmt->num_rows == 1){
+                $st = $stmt->fetch_assoc();
+                $data['message'] = $st;
+                $data['success'] = true;
+                $_SESSION['admin'] = $st['user_id'];
                  
             }else{
                 $data['success'] = false;
