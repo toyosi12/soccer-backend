@@ -82,7 +82,7 @@
             if($team = $this->read2($t)->fetch_assoc()){
                 $team_id = $team['team_id'];
             }
-            $link = "http://localhost:8080/soccer-api/invite.php?co=$coach_id&at=$athlete_id";
+            $link = "https://ionicbasis.com/soccer-api/invite.php?co=$coach_id&at=$athlete_id";
             $message = "This is a team membership request on ionicbasis.com, Please follow the link below to make a decision. Thank you.
                 $link
             ";
@@ -242,6 +242,87 @@
                 $data[] = $row;
             }
 
+            return $data;
+        }
+
+        public function friendSuggestions(){
+            $data = array();
+            $data2 = array();
+            $user_id = $_SESSION['user'];
+            // $query = "(SELECT u1.user_name, u1.user_id, friends.accepted, friends.sender_id, friends.recipient_id 
+            //             FROM friends RIGHT JOIN users u1 ON u1.user_id = friends.recipient_id 
+            //             WHERE  u1.user_id <> '$user_id'
+            //             AND friends.accepted <> 'Y')
+            //             UNION (SELECT u2.user_name, u2.user_id, friends.accepted,  friends.sender_id, friends.recipient_id  FROM friends 
+            //             RIGHT JOIN users u2 ON u2.user_id = friends.sender_id 
+            //             WHERE  u2.user_id <> '$user_id'
+            //             AND friends.accepted <> 'Y')";
+            $query = "select distinct user_name, user_id from users left join friends on (users.user_id = friends.recipient_id) 
+                        where (recipient_id is null or sender_id is null or sender_id) 
+                        AND users.user_id <> '$user_id' AND friends.accepted is null";
+            $stmt = $this->read2($query);
+            while($row = $stmt->fetch_assoc()){
+                $data[] = $row;
+            }
+            $limit = ($stmt->num_rows < 5) ? $stmt->num_rows : 5;
+            for($x = 0; $x < $limit; $x++){
+                array_push($data2, $data[$x]);
+            }
+            return $data2;
+        }
+
+        public function addFriend($user_id){
+            $sender_id = $_SESSION['user'];
+            $recipient_id = $user_id['user_id'];
+
+            //check if exists
+
+            $q = "SELECT * FROM friends WHERE sender_id = '$sender_id' AND recipient_id='$recipient_id'";
+            if($this->read2($q)->num_rows > 0){
+                echo 'already exists';
+                return;
+            }
+            $query = "INSERT INTO friends (sender_id, recipient_id) VALUES (?,?)";
+            $binder = array("ss", "$sender_id", "$recipient_id");
+            $stmt = $this->create($query, $binder);
+            return $stmt;
+        }
+
+        public function acceptFriendRequest($user_id){
+            $recipient_id = $_SESSION['user'];
+            $sender_id = $user_id['user_id'];
+            $query = "UPDATE friends SET accepted = 'Y' WHERE sender_id = ?
+                        AND recipient_id = ?";
+            $binder = array("ss", "$sender_id", "$recipient_id");
+            return $this->update($query, $binder);
+        }
+
+        public function getFriends(){
+            $data = array();
+            $user_id = $_SESSION['user'];
+            $query = "(SELECT u1.user_name, u1.user_id, friends.accepted, friends.sender_id, friends.recipient_id 
+                        FROM friends JOIN users u1 ON u1.user_id = friends.recipient_id 
+                        WHERE (sender_id = '$user_id' OR recipient_id = '$user_id') AND u1.user_id <> '$user_id') 
+                        UNION (SELECT u2.user_name, u2.user_id, friends.accepted,  friends.sender_id, friends.recipient_id  FROM friends 
+                        JOIN users u2 ON u2.user_id = friends.sender_id 
+                        WHERE (sender_id = '$user_id' OR recipient_id = '$user_id') AND u2.user_id <> '$user_id')";
+            $stmt = $this->read2($query);
+            while($row = $stmt->fetch_assoc()){
+                $data[] = $row;
+            }
+            return $data;
+        }
+
+        public function getCurrentUserDetails($user_id){
+            $user_id = $user_id['user_id'];
+            $data = array();
+            $query = "SELECT email, first_name, last_name, phone, status, user_id, user_name,
+            user_type_id, passport, school, sport, user_type FROM users JOIN user_type USING(user_type_id) WHERE user_id = ?";
+            $binder = array("s", "$user_id");
+            $stmt = $this->read($query, $binder);
+            while($row = $stmt->fetch_assoc()){
+                $data[] = $row;
+            }
             return $data;
         }
     }

@@ -17,7 +17,7 @@
         }else{
             echo "<script>alert('failed');</script>";
         }
-        //header("Location: http://localhost:8080");
+        //header("Location: https://ionicbasis.com");
         
     }
     
@@ -74,7 +74,7 @@
                                     <button type="submit" class="btn btn-primary" name="accept">Accept</button>
                                     <button type="button" class="btn btn-danger" name="decline" onclick="alert('declined')">Decline</button>
                                 </form>
-                                <p><a href="http://localhost:8080">Visit site</a></p>
+                                <p><a href="https://ionicbasis.com">Visit site</a></p>
                                 </div>
                             </div>
                         </div>

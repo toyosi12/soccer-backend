@@ -5,7 +5,7 @@
     
 
   
-    $companyLogo = 'http://localhost:8080/soccer-api/notifications/vendor/minishlink/web-push/src/logo.png';
+    $companyLogo = 'https://ionicbasis.com/soccer-api/notifications/vendor/minishlink/web-push/src/logo.png';
     $companyName = 'IONICBASIS';
     use Minishlink\WebPush\WebPush;
     use Minishlink\WebPush\Subscription;
