@@ -26,8 +26,10 @@
 
         public function getAllUsers(){
             $data = array();
+            $user_id = $_SESSION['user'];
             $query = "SELECT email, first_name, last_name, phone, status, user_id, user_name,
-            user_type_id, passport, school, sport, user_type FROM users JOIN user_type USING(user_type_id)";
+            user_type_id, passport, school, sport, user_type FROM users JOIN user_type USING(user_type_id)
+            WHERE user_id <> '$user_id'";
             $stmt = $this->read2($query);
             while($row = $stmt->fetch_assoc()){
                 $data[] = $row;
@@ -130,6 +132,21 @@
             }
 
             return $data;
+        }
+
+        public function getUserMessages(){
+            $user_id = $_SESSION['user'];
+            $data = array();
+            $query = "select distinct u.user_name, u.passport,u. user_id 
+                        from chats join users u on (u.user_id = recipient_id) 
+                        join users uu on (uu.user_id = sender_id) 
+                        where recipient_id = '$user_id' or sender_id = '$user_id'";
+            $stmt = $this->read2($query);
+            while($row  = $stmt->fetch_assoc()){
+                $data[] = $row;
+            }
+            return $data;
+            
         }
 
         public function saveEvents($events){
@@ -324,6 +341,43 @@
                 $data[] = $row;
             }
             return $data;
+        }
+
+        public function otherUser($user){
+            $user_name = $user['user_name'];
+            $data = array();
+            $query = "SELECT email, first_name, last_name, phone, status, user_id, user_name,
+            user_type_id, passport, school, sport, user_type FROM users JOIN user_type USING(user_type_id) WHERE user_name = ?";
+            $binder = array("s", "$user_name");
+            $stmt = $this->read($query, $binder);
+            while($row = $stmt->fetch_assoc()){
+                $data[] = $row;
+            }
+            return $data;
+        }
+
+        public function checkFriendShip($user){
+            //get user_id from logged in user;
+            $_data = array();
+            $other_username = $user['user_name'];
+            $current_user_id = $_SESSION['user'];
+            $q = "SELECT user_id FROM users WHERE user_name = '$other_username'";
+            $st = $this->read2($q);
+            if($st->num_rows > 0){
+                while($ro = $st->fetch_assoc()){
+                    $otherUserId = $ro['user_id'];
+                }
+            }
+            $query = "SELECT * FROM friends WHERE 
+                (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)";
+
+            $binder = array("ssss", "$otherUserId", "$current_user_id", "$current_user_id", "$otherUserId");
+            $stmt = $this->read($query, $binder);
+            while($data = $stmt->fetch_assoc()){
+                $_data[] = $data;
+            }
+
+            return $_data;
         }
     }
 
